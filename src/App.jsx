@@ -177,7 +177,6 @@ function App() {
           </p>
         </div>
 
-        {/* 2. Card Design Details (Moved Up) */}
         <div className="glass-card large-preview-section">
           <h4 className="preview-title" style={{ marginTop: 0 }}>卡片設計細節 Preview</h4>
 
@@ -194,6 +193,9 @@ function App() {
                 <img src={cardABack} alt="Design A Back" onClick={() => setLightboxImg(cardABack)} />
               </div>
             </div>
+            <p className="design-philosophy">
+              【設計理念】以昂揚金馬與傳統雲紋交織，象徵馬到成功、富貴呈祥的開春氣象。
+            </p>
           </div>
 
           <div>
@@ -209,7 +211,13 @@ function App() {
                 <img src={cardBBack} alt="Design B Back" onClick={() => setLightboxImg(cardBBack)} />
               </div>
             </div>
+            <p className="design-philosophy">
+              【設計理念】融合福袋、錢庫與討喜馬兒，傳遞財源廣進、馬上有錢的美好寓意。
+            </p>
           </div>
+          <p className="printing-note">
+            * 為維持團購之最高 CP 值服務，圖像採擬真印刷漸層色呈現，非實際金屬燙金。
+          </p>
         </div>
 
         {/* 3. Pricing Table (Kept here, but logically after details now) */}
@@ -392,7 +400,7 @@ function App() {
         🛒
       </a>
 
-    </div> /* End app-main-wrapper */
+    </div > /* End app-main-wrapper */
   );
 }
 
