@@ -874,6 +874,108 @@ input:focus {
   justify-content: center;
 }
 
+/* Swipe Carousel Styles */
+.swipe-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 10px 0 20px 0;
+  /* padding bottom for scrollbar or shadow space */
+  gap: 1.5rem;
+  scrollbar-width: none;
+  /* Hide scrollbar Firefox */
+  -ms-overflow-style: none;
+  /* Hide scrollbar IE 10+ */
+}
+
+.swipe-container::-webkit-scrollbar {
+  display: none;
+  /* Hide scrollbar WebKit */
+}
+
+.swipe-card {
+  flex: 0 0 85%;
+  /* Shows 85% of card, 15% peek of next one */
+  scroll-snap-align: center;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.swipe-card img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.swipe-hint {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .swipe-card {
+    flex: 0 0 45%;
+    /* On desktop show 2 at a time mostly */
+  }
+}
+
+/* Floating Order Button */
+.floating-order-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background: linear-gradient(135deg, var(--accent-gold), #d97706);
+  color: var(--primary-navy);
+  padding: 15px 30px;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
+  z-index: 1000;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  animation: floatBtn 2s infinite ease-in-out;
+}
+
+.floating-order-btn:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 6px 25px rgba(251, 191, 36, 0.6);
+}
+
+@keyframes floatBtn {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .floating-order-btn {
+    bottom: 80px;
+    right: 15px;
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
+}
+
 /* Stacked Large Preview Styles */
 .large-preview-grid-stacked {
   display: flex;

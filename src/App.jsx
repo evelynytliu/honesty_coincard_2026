@@ -177,7 +177,42 @@ function App() {
           </p>
         </div>
 
-        {/* Pricing Table */}
+        {/* 2. Card Design Details (Moved Up) */}
+        <div className="glass-card large-preview-section">
+          <h4 className="preview-title" style={{ marginTop: 0 }}>卡片設計細節 Preview</h4>
+
+          <div style={{ marginBottom: '2rem' }}>
+            <div className="preview-label">Design A: 金馬呈祥</div>
+            <div className="swipe-hint">
+              <span>👈</span> 左右滑動查看背面 <span>👉</span>
+            </div>
+            <div className="swipe-container">
+              <div className="swipe-card">
+                <img src={cardAFront} alt="Design A Front" onClick={() => setLightboxImg(cardAFront)} />
+              </div>
+              <div className="swipe-card">
+                <img src={cardABack} alt="Design A Back" onClick={() => setLightboxImg(cardABack)} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="preview-label">Design B: 馬上有錢</div>
+            <div className="swipe-hint">
+              <span>👈</span> 左右滑動查看背面 <span>👉</span>
+            </div>
+            <div className="swipe-container">
+              <div className="swipe-card">
+                <img src={cardBFront} alt="Design B Front" onClick={() => setLightboxImg(cardBFront)} />
+              </div>
+              <div className="swipe-card">
+                <img src={cardBBack} alt="Design B Back" onClick={() => setLightboxImg(cardBBack)} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Pricing Table (Kept here, but logically after details now) */}
         <div className="glass-card">
           <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>🧧 團購優惠價</span>
@@ -230,7 +265,8 @@ function App() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-card">
+        {/* 4. Order Form with ID for anchor */}
+        <form onSubmit={handleSubmit} className="glass-card" id="order-form">
           <h3>📝 預訂資料</h3>
 
           <div className="form-group">
@@ -334,22 +370,6 @@ function App() {
 
         </form>
 
-        <div className="glass-card">
-          <h4 className="preview-title" style={{ marginTop: 0 }}>卡片設計細節 Preview</h4>
-          <div className="large-preview-grid-stacked">
-            <div className="preview-group-stacked">
-              <div className="preview-label">Design A: 金馬呈祥</div>
-              <img src={cardAFront} className="large-preview-img-stacked" alt="Design A Front" onClick={() => setLightboxImg(cardAFront)} />
-              <img src={cardABack} className="large-preview-img-stacked" alt="Design A Back" onClick={() => setLightboxImg(cardABack)} />
-            </div>
-            <div className="preview-group-stacked">
-              <div className="preview-label">Design B: 馬上有錢</div>
-              <img src={cardBFront} className="large-preview-img-stacked" alt="Design B Front" onClick={() => setLightboxImg(cardBFront)} />
-              <img src={cardBBack} className="large-preview-img-stacked" alt="Design B Back" onClick={() => setLightboxImg(cardBBack)} />
-            </div>
-          </div>
-        </div>
-
         {/* Live Counter */}
         {/* Live Counter */}
         <div className="live-counter" title="全公司即時預訂總量">
@@ -366,6 +386,12 @@ function App() {
         </footer>
 
       </div> {/* End content-container */}
+
+      {/* Floating Action Button */}
+      <a href="#order-form" className="floating-order-btn">
+        🛒 我要訂購
+      </a>
+
     </div> /* End app-main-wrapper */
   );
 }
