@@ -926,30 +926,32 @@ input:focus {
 }
 
 /* Floating Order Button */
+/* Floating Order Button */
 .floating-order-btn {
   position: fixed;
   bottom: 90px;
   right: 20px;
   background: linear-gradient(135deg, var(--accent-gold), #d97706);
   color: var(--primary-navy);
-  padding: 15px 30px;
-  border-radius: 50px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
   z-index: 1000;
   cursor: pointer;
   text-decoration: none;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
   transition: transform 0.2s, box-shadow 0.2s;
   border: 2px solid rgba(255, 255, 255, 0.2);
   animation: floatBtn 2s infinite ease-in-out;
 }
 
 .floating-order-btn:hover {
-  transform: scale(1.05) translateY(-2px);
+  transform: scale(1.1) translateY(-2px);
   box-shadow: 0 6px 25px rgba(251, 191, 36, 0.6);
 }
 
@@ -971,8 +973,9 @@ input:focus {
   .floating-order-btn {
     bottom: 80px;
     right: 15px;
-    padding: 12px 24px;
-    font-size: 1rem;
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
   }
 }
 

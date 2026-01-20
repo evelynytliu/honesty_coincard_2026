@@ -388,8 +388,8 @@ function App() {
       </div> {/* End content-container */}
 
       {/* Floating Action Button */}
-      <a href="#order-form" className="floating-order-btn">
-        🛒 我要訂購
+      <a href="#order-form" className="floating-order-btn" title="我要預訂">
+        🛒
       </a>
 
     </div> /* End app-main-wrapper */
