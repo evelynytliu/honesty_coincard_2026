@@ -8,20 +8,22 @@ import cardAFront from './assets/card_a_front.png';
 import cardABack from './assets/card_a_back.png';
 import cardBFront from './assets/card_b_front.png';
 import cardBBack from './assets/card_b_back.png';
+import printAFront from './assets/print_a_front.png';
+import printBFront from './assets/print_b_front.png';
 import heroImg from './assets/hero.png';
 
 const PRICING_TIERS = [
-  { min: 1500, price: 2.5 },
-  { min: 1000, price: 3.0 },
-  { min: 500, price: 3.5 },
-  { min: 300, price: 5.0 },
-  { min: 200, price: 7.0 },
-  { min: 0, price: 7.0 }, // Fallback for low quantities
+  { min: 1500, price: 4.5 },
+  { min: 1000, price: 5.0 },
+  { min: 500, price: 6.0 },
+  { min: 300, price: 7.0 },
+  { min: 200, price: 9.0 },
+  { min: 0, price: 9.0 }, // Fallback for low quantities
 ];
 
 function getPricePerUnit(totalQty) {
   const tier = PRICING_TIERS.find(t => totalQty >= t.min);
-  return tier ? tier.price : 7.0;
+  return tier ? tier.price : 9.0;
 }
 
 function App() {
@@ -42,6 +44,21 @@ function App() {
   const [totalSystemCountB, setTotalSystemCountB] = useState(0);
   const totalSystemCount = totalSystemCountA + totalSystemCountB;
   const [lightboxImg, setLightboxImg] = useState(null); // New state for lightbox
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
+  const [viewSideA, setViewSideA] = useState('right');
+  const [viewSideB, setViewSideB] = useState('right');
+
+  const handleScrollA = (e) => {
+    const { scrollLeft, clientWidth } = e.target;
+    setViewSideA(scrollLeft > clientWidth / 2 ? 'left' : 'right');
+  };
+
+  const handleScrollB = (e) => {
+    const { scrollLeft, clientWidth } = e.target;
+    setViewSideB(scrollLeft > clientWidth / 2 ? 'left' : 'right');
+  };
+
+  const DEADLINE = new Date('2026-01-23T17:00:00');
 
   // Derived state
   // Derived state
@@ -79,6 +96,29 @@ function App() {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, []);
+
+  // Countdown effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const distance = DEADLINE - now;
+
+      if (distance < 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
+        clearInterval(timer);
+      } else {
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000),
+          expired: false
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
   async function fetchTotal() {
@@ -152,8 +192,10 @@ function App() {
         <img src={heroImg} alt="2026 Year of the Horse" className="hero-image" />
         <div className="hero-overlay">
           <div className="hero-content">
-            <h1>2026 金馬呈祥 · 萬事如意</h1>
-            <p className="subtitle" style={{ marginBottom: 0 }}>Designed for 大誠保險經紀人</p>
+            <h1>2026 金馬呈祥</h1>
+            <p className="subtitle" style={{ marginBottom: 0 }}>
+              <span className="nowrap">Designed for</span> <span className="nowrap">大誠保險經紀人</span>
+            </p>
           </div>
         </div>
       </div>
@@ -175,6 +217,9 @@ function App() {
             接充滿希望的 2026 馬年，讓我們以「金馬呈祥」與「馬上有錢」這兩款一元賀歲小卡，
             表達對夥伴與客戶最真摯的祝福。
           </p>
+          <div style={{ marginTop: '1rem', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '1.2rem' }}>
+            ⏳ 預訂截止時間：2026/1/23 (五) 17:00
+          </div>
         </div>
 
         <div className="glass-card large-preview-section">
@@ -182,42 +227,31 @@ function App() {
 
           <div style={{ marginBottom: '2rem' }}>
             <div className="preview-label">Design A: 金馬呈祥</div>
-            <div className="swipe-hint">
-              <span>👈</span> 左右滑動查看背面 <span>👉</span>
-            </div>
-            <div className="swipe-container">
+            <div className="swipe-container" onScroll={handleScrollA}>
               <div className="swipe-card">
                 <img src={cardAFront} alt="Design A Front" onClick={() => setLightboxImg(cardAFront)} />
+                <div className="swipe-caption">正面 (硬幣為示意)</div>
               </div>
               <div className="swipe-card">
                 <img src={cardABack} alt="Design A Back" onClick={() => setLightboxImg(cardABack)} />
+                <div className="swipe-caption">背面</div>
               </div>
             </div>
-            <p className="design-philosophy">
-              【設計理念】以昂揚金馬與傳統雲紋交織，象徵馬到成功、富貴呈祥的開春氣象。
-            </p>
           </div>
 
           <div>
             <div className="preview-label">Design B: 馬上有錢</div>
-            <div className="swipe-hint">
-              <span>👈</span> 左右滑動查看背面 <span>👉</span>
-            </div>
-            <div className="swipe-container">
+            <div className="swipe-container" onScroll={handleScrollB}>
               <div className="swipe-card">
                 <img src={cardBFront} alt="Design B Front" onClick={() => setLightboxImg(cardBFront)} />
+                <div className="swipe-caption">正面 (硬幣為示意)</div>
               </div>
               <div className="swipe-card">
                 <img src={cardBBack} alt="Design B Back" onClick={() => setLightboxImg(cardBBack)} />
+                <div className="swipe-caption">背面</div>
               </div>
             </div>
-            <p className="design-philosophy">
-              【設計理念】融合福袋、錢庫與討喜馬兒，傳遞財源廣進、馬上有錢的美好寓意。
-            </p>
           </div>
-          <p className="printing-note">
-            * 為維持團購之最高 CP 值服務，圖像採擬真印刷漸層色呈現，非實際金屬燙金。
-          </p>
         </div>
 
         {/* 3. Pricing Table (Kept here, but logically after details now) */}
@@ -267,10 +301,17 @@ function App() {
               })}
             </tbody>
           </table>
-          <p style={{ fontSize: '0.9rem', color: '#D32F2F', fontWeight: 'bold' }}>
-            * 目前全體累積數量：{totalSystemCount.toLocaleString()} 張<br />
-            * 您的單價將依照「全體累積總量」計算，買越多越便宜！
-          </p>
+          <div className="product-highlights" style={{ marginBottom: '1.5rem', marginTop: '0' }}>
+            <div className="highlight-badge">🖨️ 雙面彩色印刷</div>
+            <div className="highlight-badge">✉️ 包含小卡及OPP袋</div>
+            <div className="highlight-badge">💰 包含一元硬幣</div>
+          </div>
+          <div style={{ fontSize: '0.9rem', color: 'var(--text-gold)', fontWeight: 'bold', marginTop: '1rem' }}>
+            <div className="hanging-indent">* 目前全體累積數量：{totalSystemCount.toLocaleString()} 張</div>
+            <div className="hanging-indent">* 您的單價將依照「全體累積總量」計算，買越多越便宜！</div>
+            <div className="hanging-indent">* 為維持團購之最高 CP 值，圖像採擬真印刷漸層色，非實際金屬燙金。</div>
+            <div className="hanging-indent">* 圖中的一元硬幣為示意圖。</div>
+          </div>
         </div>
 
         {/* 4. Order Form with ID for anchor */}
@@ -303,39 +344,63 @@ function App() {
             <div className="cards-selection-grid">
               <div className="card-item-compact">
                 <div className="item-left">
-                  <img src={cardAFront} className="thumb-img" onClick={() => setLightboxImg(cardAFront)} />
+                  <img src={printAFront} className="thumb-img" onClick={() => setLightboxImg(printAFront)} />
                   <div className="item-details">
-                    <span className="item-title">Design A: 金馬呈祥</span>
+                    <div className="item-title-container">
+                      <span className="title-prefix">Design A:</span>
+                      <span className="title-name">金馬呈祥</span>
+                    </div>
                     <span className="view-back-link" onClick={() => setLightboxImg(cardABack)}>查看背面</span>
                   </div>
                 </div>
                 <div className="item-right">
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={qtyA === 0 ? '' : qtyA}
-                    onChange={e => setQtyA(parseInt(e.target.value) || 0)}
-                  />
+                  <div className="input-wrapper">
+                    <input
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      step="10"
+                      placeholder="0"
+                      value={qtyA === 0 ? '' : qtyA}
+                      onChange={e => setQtyA(parseInt(e.target.value) || 0)}
+                      style={{ borderColor: (qtyA > 0 && qtyA % 10 !== 0) ? '#ef4444' : '' }}
+                    />
+                    <span className="unit-label">張</span>
+                  </div>
+                  {(qtyA > 0 && qtyA % 10 !== 0) && (
+                    <div className="warning-text">⚠ 訂購以10張為單位</div>
+                  )}
                 </div>
               </div>
 
               <div className="card-item-compact">
                 <div className="item-left">
-                  <img src={cardBFront} className="thumb-img" onClick={() => setLightboxImg(cardBFront)} />
+                  <img src={printBFront} className="thumb-img" onClick={() => setLightboxImg(printBFront)} />
                   <div className="item-details">
-                    <span className="item-title">Design B: 馬上有錢</span>
+                    <div className="item-title-container">
+                      <span className="title-prefix">Design B:</span>
+                      <span className="title-name">馬上有錢</span>
+                    </div>
                     <span className="view-back-link" onClick={() => setLightboxImg(cardBBack)}>查看背面</span>
                   </div>
                 </div>
                 <div className="item-right">
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={qtyB === 0 ? '' : qtyB}
-                    onChange={e => setQtyB(parseInt(e.target.value) || 0)}
-                  />
+                  <div className="input-wrapper">
+                    <input
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      step="10"
+                      placeholder="0"
+                      value={qtyB === 0 ? '' : qtyB}
+                      onChange={e => setQtyB(parseInt(e.target.value) || 0)}
+                      style={{ borderColor: (qtyB > 0 && qtyB % 10 !== 0) ? '#ef4444' : '' }}
+                    />
+                    <span className="unit-label">張</span>
+                  </div>
+                  {(qtyB > 0 && qtyB % 10 !== 0) && (
+                    <div className="warning-text">⚠ 訂購以10張為單位</div>
+                  )}
                 </div>
 
               </div>
@@ -354,7 +419,7 @@ function App() {
             {/* Subtle Pricing Context */}
             <div className="tier-notification">
               <div style={{ marginBottom: '4px' }}>
-                單價: <strong>${pricePerUnit}元</strong> <span style={{ fontSize: '0.8em', fontWeight: 'normal' }}>(原價 $7.0)</span>
+                單價: <strong>${pricePerUnit}元</strong> <span style={{ fontSize: '0.8em', fontWeight: 'normal' }}>(原價 $9.0)</span>
               </div>
               <div style={{ fontSize: '0.85rem', color: '#fbbf24', opacity: 0.9, fontWeight: 'normal' }}>
                 預估累積數量：{currentGrandTotal.toLocaleString()} 張 / 目前適用級距：{currentTierMin.toLocaleString()} 張
@@ -365,15 +430,35 @@ function App() {
               <span className="final-amount-label">您的預估金額</span>
               <span className="final-amount">${totalPrice.toLocaleString()}</span>
             </div>
+            {(() => {
+              // Find next tier logic
+              const nextTier = PRICING_TIERS.slice().reverse().find(t => t.min > currentTierMin && t.price < pricePerUnit);
+              if (nextTier && totalQty > 0) {
+                const needed = Math.max(0, nextTier.min - currentGrandTotal);
+                const potentialSaving = (pricePerUnit - nextTier.price) * totalQty;
+                // Only show if there IS a next tier and savings are positive
+                if (potentialSaving > 0) {
+                  return (
+                    <div className="savings-opportunity">
+                      🔥 若全體再累積 <strong>{needed.toLocaleString()}</strong> 張，
+                      您的金額將變為 <strong>${Math.round(nextTier.price * totalQty).toLocaleString()}</strong>
+                      (省下 <strong>${Math.round(potentialSaving).toLocaleString()}</strong>)。
+                    </div>
+                  );
+                }
+              }
+              return null;
+            })()}
             <div className="estimated-note">
               * 實際金額將於截止後，依全體最終累積總量結算
             </div>
           </div>
 
           <div style={{ marginTop: '20px' }}>
-            <button type="submit" className="submit-btn" disabled={submitting || totalQty <= 0}>
-              {submitting ? '送出中...' : '確認預訂'}
+            <button type="submit" className="submit-btn" disabled={submitting || totalQty <= 0 || timeLeft.expired}>
+              {timeLeft.expired ? '已截止預訂' : (submitting ? '送出中...' : '確認預訂')}
             </button>
+            {timeLeft.expired && <p style={{ color: '#ef4444', marginTop: '10px' }}>預訂時間已過，感謝您的支持。</p>}
           </div>
 
         </form>
@@ -395,10 +480,20 @@ function App() {
 
       </div> {/* End content-container */}
 
-      {/* Floating Action Button */}
-      <a href="#order-form" className="floating-order-btn" title="我要預訂">
-        🛒
-      </a>
+      {/* Floating Action Button with Countdown */}
+      <div className="floating-action-group">
+        {!timeLeft.expired && (
+          <div className="countdown-bubble">
+            <div className="countdown-label">距離截止還剩</div>
+            <div className="countdown-time">
+              {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+            </div>
+          </div>
+        )}
+        <a href="#order-form" className="floating-order-btn" title="我要預訂">
+          🛒
+        </a>
+      </div>
 
     </div > /* End app-main-wrapper */
   );

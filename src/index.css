@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --primary-navy: #0f172a;
   /* Deep Navy Background */
@@ -30,6 +34,8 @@ body {
 .app-main-wrapper {
   width: 100%;
   overflow-x: hidden;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  /* Space for the fixed counter */
 }
 
 .hero-section {
@@ -39,8 +45,8 @@ body {
   /* Takes up 60% of viewport height */
   min-height: 400px;
   overflow: hidden;
-  margin-bottom: -2rem;
-  /* Reduced overlap to prevent text hiding */
+  margin-bottom: -4.5rem;
+  /* Increased overlap as requested for updated hero image */
   z-index: 1;
 }
 
@@ -59,23 +65,30 @@ body {
   width: 100%;
   height: 100%;
   /* Gradient only at the very bottom to let the image shine */
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.6) 100%);
-  display: flex;
-  align-items: flex-end;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6) 100%);
   /* Move text to bottom */
-  justify-content: center;
-  padding-bottom: 14rem;
-  /* Significantly increased spacing to push text up on desktop */
+  /* Remove flex alignment to use absolute positioning logic universally */
+  display: block;
+  padding-bottom: 0;
+  z-index: 20;
+  pointer-events: none;
 }
 
 .hero-content {
+  position: absolute;
+  bottom: 120px;
+  /* Desktop default: Lowered to clear card graphics better */
+  width: 100%;
+  left: 0;
   text-align: center;
   color: white;
   text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
-  /* Stronger shadow */
   animation: fadeInUp 1.2s ease-out;
-  /* Changed from fadeInDown */
   padding: 0 20px;
+  box-sizing: border-box;
+  /* Fix centering issue */
+  z-index: 50;
+  pointer-events: auto;
 }
 
 .hero-content h1 {
@@ -93,7 +106,8 @@ body {
   margin-top: 1rem;
   font-family: 'Noto Serif TC', serif;
   font-size: 1.5rem;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.25em;
+  /* Reduced to prevent vanishing on some layouts */
   font-weight: 300;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
@@ -122,22 +136,45 @@ body {
 
 @media (max-width: 768px) {
   .hero-content h1 {
-    font-size: 2.5rem;
+    font-size: 1.8rem;
   }
 
   .hero-content .subtitle {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.1em;
   }
 
   .hero-section {
-    margin-bottom: -2rem;
-    /* Reduce overlap on mobile */
-    height: 50vh;
+    margin-bottom: -4rem;
+    /* Restore overlap for design effect */
+    height: 60vh;
+    min-height: 450px;
+    position: relative;
   }
 
+  /* Force absolute positioning to guarantee location */
   .hero-overlay {
-    padding-bottom: 6rem;
+    display: block;
+    padding-bottom: 0;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 90px;
+    /* Lowered on mobile as requested (180px -> 90px) */
+    width: 100%;
+    left: 0;
+    text-align: center;
+    z-index: 50;
+    pointer-events: auto;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  }
+
+  .content-container {
+    margin-top: 0;
+    padding-top: 0;
   }
 }
 
@@ -172,6 +209,10 @@ h1 {
   text-transform: uppercase;
   font-weight: 400;
   opacity: 0.9;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 
 .glass-card {
@@ -245,6 +286,66 @@ input[type="number"] {
   transition: all 0.2s;
 }
 
+input[type="number"] {
+  width: 100px;
+  padding: 8px;
+  /* Standard padding */
+  padding-right: 25px;
+  /* Space for spinner */
+  text-align: right;
+  border-radius: 6px;
+}
+
+/* Force spinner to the right edge despite padding */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  margin-right: -18px;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+input[type="number"]:hover::-webkit-inner-spin-button,
+input[type="number"]:hover::-webkit-outer-spin-button,
+input[type="number"]:focus::-webkit-inner-spin-button,
+input[type="number"]:focus::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.warning-text {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  animation: fadeIn 0.3s ease;
+  text-align: right;
+  white-space: nowrap;
+  /* Prevent squashing */
+}
+
+.item-right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  /* Prevent shrinking on mobile */
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unit-label {
+  position: static;
+  color: var(--text-gold);
+  font-size: 1rem;
+  pointer-events: none;
+  transform: none;
+}
+
 input:focus {
   outline: none;
   border-color: var(--accent-gold);
@@ -302,8 +403,6 @@ input:focus {
 .price-table tr.active-tier td {
   color: var(--accent-gold);
   border-bottom: 1px solid rgba(251, 191, 36, 0.5);
-  transform: scale(1.02);
-  /* Subtle pop */
 }
 
 /* First column (Qty) specific styling */
@@ -516,12 +615,17 @@ input:focus {
 .live-counter {
   position: fixed;
   bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Anchor to bottom including safe area */
   left: 0;
   width: 100%;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.98);
+  /* Slightly more solid for readability */
   border-top: 1px solid var(--accent-gold);
   color: var(--accent-gold);
-  padding: 15px 0;
+  padding-top: 15px;
+  padding-left: 0;
+  padding-right: 0;
   text-align: center;
   font-weight: bold;
   z-index: 1000;
@@ -608,12 +712,18 @@ input:focus {
   padding: 1rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 0.5rem;
+  /* Ensure spacing between left and right */
 }
 
 .item-left {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
+  /* Allow taking available space */
+  min-width: 0;
+  /* Enable shrinking for text truncation/wrapping */
 }
 
 .thumb-img {
@@ -643,9 +753,7 @@ input:focus {
   cursor: pointer;
 }
 
-.item-right {
-  width: 100px;
-}
+
 
 .intro-card {
   text-align: center;
@@ -669,6 +777,48 @@ input:focus {
   padding-right: 10px;
   color: var(--accent-gold);
   font-family: 'Playfair Display', serif;
+}
+
+.product-highlights {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  /* Fix: allow wrapping to prevent hiding on small screens */
+}
+
+.highlight-badge {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: var(--accent-gold);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.highlight-badge.warning {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+@media (max-width: 600px) {
+  .product-highlights {
+    justify-content: center;
+    /* Center labels on mobile */
+    gap: 8px;
+  }
+
+  .highlight-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
 }
 
 .stats-row {
@@ -863,9 +1013,26 @@ input:focus {
 
 .preview-label {
   text-align: center;
-  color: var(--text-white);
-  margin-bottom: 1rem;
-  font-weight: bold;
+  color: var(--accent-gold);
+  margin-bottom: 1.5rem;
+  font-family: 'Playfair Display', 'Noto Serif TC', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.preview-label::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
 }
 
 .preview-imgs {
@@ -886,6 +1053,24 @@ input:focus {
   /* Hide scrollbar Firefox */
   -ms-overflow-style: none;
   /* Hide scrollbar IE 10+ */
+  position: relative;
+}
+
+.swipe-caption {
+  text-align: center;
+  color: var(--text-gold);
+  font-size: 0.9rem;
+  margin-top: 5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Cleaned up old animations */
+
+@media (min-width: 768px) {
+  .swipe-indicator {
+    display: none;
+  }
 }
 
 .swipe-container::-webkit-scrollbar {
@@ -907,26 +1092,20 @@ input:focus {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-.swipe-hint {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8rem;
-  margin-bottom: 0.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
+.hanging-indent {
+  padding-left: 1.25em;
+  text-indent: -1.25em;
+  margin-bottom: 0.4rem;
+  line-height: 1.5;
 }
 
-.design-philosophy {
-  font-size: 0.9rem;
-  color: #94a3b8;
-  line-height: 1.6;
-  margin-top: 0.5rem;
-  padding: 0 10px;
-  text-align: center;
-  font-weight: 300;
+@media (max-width: 600px) {
+  .hanging-indent {
+    font-size: 0.85rem;
+  }
 }
+
+
 
 .printing-note {
   font-size: 0.8rem;
@@ -946,12 +1125,63 @@ input:focus {
   }
 }
 
-/* Floating Order Button */
-/* Floating Order Button */
-.floating-order-btn {
+/* Floating Action Group & Countdown Bubble */
+/* Floating Action Group & Countdown Bubble */
+.floating-action-group {
   position: fixed;
-  bottom: 90px;
+  bottom: calc(85px + env(safe-area-inset-bottom, 0px));
+  /* Stay above live counter */
   right: 20px;
+  display: flex;
+  flex-direction: row;
+  /* Changed from row-reverse to swap positions */
+  align-items: center;
+  gap: 12px;
+  z-index: 1000;
+  pointer-events: none;
+  /* Allow clicking through the gaps */
+}
+
+.floating-action-group * {
+  pointer-events: auto;
+  /* Enable clicks on elements in the group */
+}
+
+.countdown-bubble {
+  background: rgba(15, 23, 42, 0.4);
+  /* High transparency as requested */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  padding: 4px 12px;
+  border-radius: 30px;
+  /* Pill shape is more compact */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.countdown-label {
+  font-size: 0.55rem;
+  color: var(--text-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: -2px;
+  opacity: 0.7;
+}
+
+.countdown-time {
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: bold;
+  font-family: 'Inter', sans-serif;
+}
+
+.floating-order-btn {
   background: linear-gradient(135deg, var(--accent-gold), #d97706);
   color: var(--primary-navy);
   width: 50px;
@@ -960,7 +1190,6 @@ input:focus {
   font-weight: bold;
   font-size: 1.5rem;
   box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
-  z-index: 1000;
   cursor: pointer;
   text-decoration: none;
   display: flex;
@@ -969,6 +1198,7 @@ input:focus {
   transition: transform 0.2s, box-shadow 0.2s;
   border: 2px solid rgba(255, 255, 255, 0.2);
   animation: floatBtn 2s infinite ease-in-out;
+  flex-shrink: 0;
 }
 
 .floating-order-btn:hover {
@@ -991,12 +1221,16 @@ input:focus {
 }
 
 @media (max-width: 600px) {
-  .floating-order-btn {
-    bottom: 80px;
+  .floating-action-group {
+    bottom: calc(75px + env(safe-area-inset-bottom, 0px));
     right: 15px;
+    gap: 8px;
+    /* Slightly tighter on mobile */
+  }
+
+  .floating-order-btn {
     width: 56px;
     height: 56px;
-    font-size: 1.5rem;
   }
 }
 
@@ -1025,4 +1259,166 @@ input:focus {
 
 .large-preview-img-stacked:last-child {
   margin-bottom: 0;
+}
+
+/* Admin Responsive Styles */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 10px !important;
+  }
+
+  .admin-card {
+    padding: 1rem !important;
+    /* Fix: Reduce glass-card padding on mobile */
+  }
+
+  .admin-title-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  /* Hide original table headers on mobile */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-table tr {
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 20px;
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    /* Align top for better wrapping */
+    padding: 10px 0 !important;
+    border: none !important;
+    gap: 10px;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: var(--text-gold);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    min-width: 90px;
+    /* Fix: Give labels consistent space */
+    flex-shrink: 0;
+  }
+
+  /* Ensure values wrap properly and don't push outside card */
+  .admin-table td:not([data-label="姓名"]) {
+    text-align: right;
+    word-break: break-all;
+    flex-grow: 1;
+  }
+
+  /* Specific styling for name row in card */
+  .admin-table td[data-label="姓名"] {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 10px;
+    font-size: 1.3rem;
+    text-align: left !important;
+    display: block;
+  }
+
+  .admin-table td[data-label="姓名"]::before {
+    display: none;
+  }
+
+  .admin-table td[data-label="預估應付"] {
+    margin-top: 10px;
+    padding-top: 15px !important;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2) !important;
+    font-size: 1.1rem;
+  }
+}
+
+.savings-opportunity {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+  line-height: 1.5;
+  animation: fadeIn 0.5s ease;
+}
+
+.savings-opportunity strong {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* Default: Desktop/Tablet */
+.item-title-container {
+  display: inline-flex;
+  gap: 6px;
+  color: var(--text-gold);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+
+  /* Step 1: Break title into two lines, but keep Image+Text | Input layout */
+  .item-title-container {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Ensure card structure is Row */
+  .card-item-compact {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 420px) {
+
+  /* Step 2: Stack everything vertically only for very narrow screens */
+  .card-item-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .item-left {
+    width: 100%;
+  }
+
+  .item-right {
+    width: 100%;
+    align-items: flex-start;
+    /* Align left */
+    padding-left: 76px;
+    /* 60px image + 1rem gap approx to align with text */
+    margin-top: -10px;
+    /* Pull up slightly closer to text */
+  }
+
+  .item-title-container {
+    flex-direction: column;
+  }
+
+  /* Reset input width to be slightly larger on mobile stack if needed, or keep as is */
 }

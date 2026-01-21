@@ -10,17 +10,17 @@ function AdminOrders() {
 
     // Reusing the pricing tiers for consistency
     const PRICING_TIERS = [
-        { min: 1500, price: 2.5 },
-        { min: 1000, price: 3.0 },
-        { min: 500, price: 3.5 },
-        { min: 300, price: 5.0 },
-        { min: 200, price: 7.0 },
-        { min: 0, price: 7.0 },
+        { min: 1500, price: 4.5 },
+        { min: 1000, price: 5.0 },
+        { min: 500, price: 6.0 },
+        { min: 300, price: 7.0 },
+        { min: 200, price: 9.0 },
+        { min: 0, price: 9.0 },
     ];
 
     function getPricePerUnit(totalQty) {
         const tier = PRICING_TIERS.find(t => totalQty >= t.min);
-        return tier ? tier.price : 7.0;
+        return tier ? tier.price : 9.0;
     }
 
     useEffect(() => {
@@ -71,11 +71,11 @@ function AdminOrders() {
     }
 
     return (
-        <div className="admin-container" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', color: 'white' }}>
-            <div className="glass-card" style={{ padding: '2rem' }}>
+        <div className="admin-container" style={{ maxWidth: '1200px', margin: '0 auto', color: 'white' }}>
+            <div className="glass-card admin-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                     <h1 style={{ fontSize: '2rem', margin: 0 }}>📋 預訂管理後台</h1>
-                    <a href="/" style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }}>返回首頁</a>
+                    <a href="./" style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }}>返回首頁</a>
                 </div>
 
                 <div className="stats-panel" style={{
@@ -91,13 +91,13 @@ function AdminOrders() {
                         <div style={{ fontSize: '2rem', color: '#10b981', fontWeight: 'bold' }}>${currentPrice}</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#ccc', fontSize: '0.9rem' }}>預估總營業額</div>
+                        <div style={{ color: '#ccc', fontSize: '0.9rem' }}>預估總額</div>
                         <div style={{ fontSize: '2rem', color: 'var(--text-white)', fontWeight: 'bold' }}>${(grandTotalQty * currentPrice).toLocaleString()}</div>
                     </div>
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>
-                    <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+                    <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ borderBottom: '2px solid var(--accent-gold)', color: 'var(--text-gold)' }}>
                                 <th style={{ padding: '12px', textAlign: 'left' }}>日期</th>
@@ -106,26 +106,25 @@ function AdminOrders() {
                                 <th style={{ padding: '12px', textAlign: 'center' }}>Design A</th>
                                 <th style={{ padding: '12px', textAlign: 'center' }}>Design B</th>
                                 <th style={{ padding: '12px', textAlign: 'center' }}>總張數</th>
-                                <th style={{ padding: '12px', textAlign: 'right' }}>預估應付 (以${currentPrice}計)</th>
+                                <th style={{ padding: '12px', textAlign: 'right' }}>預估應付</th>
                             </tr>
                         </thead>
                         <tbody>
                             {orders.map(order => {
                                 const orderTotal = order.card_type_a_qty + order.card_type_b_qty;
-                                // Calculate price based on CURRENT grand total, not what was saved
                                 const dynamicTotal = Math.ceil(orderTotal * currentPrice);
 
                                 return (
                                     <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                        <td style={{ padding: '12px', color: '#ccc', fontSize: '0.85rem' }}>
+                                        <td data-label="日期" style={{ padding: '12px', color: '#ccc', fontSize: '0.85rem' }}>
                                             {new Date(order.created_at).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                         </td>
-                                        <td style={{ padding: '12px', fontWeight: 'bold' }}>{order.name}</td>
-                                        <td style={{ padding: '12px' }}>{order.department}</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', color: '#ccc' }}>{order.card_type_a_qty || '-'}</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', color: '#ccc' }}>{order.card_type_b_qty || '-'}</td>
-                                        <td style={{ padding: '12px', textAlign: 'center', fontSize: '1.1rem' }}>{orderTotal}</td>
-                                        <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: 'bold' }}>
+                                        <td data-label="姓名" style={{ padding: '12px', fontWeight: 'bold' }}>{order.name}</td>
+                                        <td data-label="事業體" style={{ padding: '12px' }}>{order.department}</td>
+                                        <td data-label="Design A" style={{ padding: '12px', textAlign: 'center', color: '#ccc' }}>{order.card_type_a_qty || '-'}</td>
+                                        <td data-label="Design B" style={{ padding: '12px', textAlign: 'center', color: '#ccc' }}>{order.card_type_b_qty || '-'}</td>
+                                        <td data-label="總張數" style={{ padding: '12px', textAlign: 'center', fontSize: '1.1rem' }}>{orderTotal}</td>
+                                        <td data-label="預估應付" style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: 'bold' }}>
                                             ${dynamicTotal.toLocaleString()}
                                         </td>
                                     </tr>
