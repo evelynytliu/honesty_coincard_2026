@@ -163,11 +163,7 @@ function App() {
       alert("訂購失敗，請稍後再試或聯繫管理員。\n" + error.message);
     } else {
       setSuccess(true);
-      // Reset form
-      setName('');
-      setDepartment('');
-      setQtyA(0);
-      setQtyB(0);
+      // State clearing moved to "Continue" button
     }
     setSubmitting(false);
   };
@@ -176,10 +172,63 @@ function App() {
     return (
       <div className="app-container" style={{ textAlign: 'center', marginTop: '50px' }}>
         <div className="glass-card">
-          <h1 style={{ color: 'var(--primary-red)' }}>🎉 預訂成功！</h1>
-          <p className="subtitle">感謝您的支持，金馬呈祥，馬上有錢！</p>
-          <button className="submit-btn" onClick={() => setSuccess(false)}>
-            繼續預訂
+          <h1 style={{ color: 'var(--primary-red)', marginBottom: '0.5rem' }}>🎉 預訂成功！</h1>
+          <p className="subtitle" style={{ marginBottom: '1.5rem' }}>我們已收到您的預訂需求</p>
+
+          <div className="order-summary" style={{ textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '12px', margin: '0 auto 20px', maxWidth: '400px' }}>
+            <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '15px', marginTop: 0, fontSize: '1.1rem', color: 'var(--text-gold)' }}>
+              📋 預訂明細
+            </h3>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <span style={{ color: '#94a3b8' }}>姓名</span>
+              <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{name}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <span style={{ color: '#94a3b8' }}>事業體</span>
+              <span style={{ fontWeight: 'bold' }}>{department}</span>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
+              {qtyA > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span>Design A (金馬呈祥)</span>
+                  <span style={{ fontWeight: 'bold' }}>{qtyA} 張</span>
+                </div>
+              )}
+              {qtyB > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span>Design B (馬上有錢)</span>
+                  <span style={{ fontWeight: 'bold' }}>{qtyB} 張</span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '15px' }}>
+              <span style={{ color: '#94a3b8' }}>預估總金額</span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '1.5rem', color: '#fbbf24', fontWeight: 'bold', lineHeight: 1 }}>
+                  ${totalPrice.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+                  *最終金額依結單總量計算
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '20px' }}>
+            請截圖保存此畫面作為紀錄
+          </p>
+
+          <button className="submit-btn" onClick={() => {
+            setSuccess(false);
+            setName('');
+            setDepartment('');
+            setQtyA(0);
+            setQtyB(0);
+          }}>
+            繼續預訂下一筆
           </button>
         </div>
       </div>
@@ -417,41 +466,83 @@ function App() {
             </div>
 
             {/* Subtle Pricing Context */}
-            <div className="tier-notification">
-              <div style={{ marginBottom: '4px' }}>
-                單價: <strong>${pricePerUnit}元</strong> <span style={{ fontSize: '0.8em', fontWeight: 'normal' }}>(原價 $9.0)</span>
+            {/* Price Scenario Table */}
+            <div style={{ marginTop: '1rem' }}>
+              <div style={{ fontSize: '0.9rem', marginBottom: '8px', color: '#94a3b8' }}>
+                您的預估金額試算：
               </div>
-              <div style={{ fontSize: '0.85rem', color: '#fbbf24', opacity: 0.9, fontWeight: 'normal' }}>
-                預估累積數量：{currentGrandTotal.toLocaleString()} 張 / 目前適用級距：{currentTierMin.toLocaleString()} 張
+              <table className="scenario-table">
+                <thead>
+                  <tr>
+                    <th>全體累積</th>
+                    <th>單價</th>
+                    <th>您的金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PRICING_TIERS.slice().sort((a, b) => a.min - b.min).map((tier, index) => {
+                    // Only show current tier and higher/better tiers (which have equal or higher min than current active tier, OR equal to current active tier)
+                    // Wait, we want to show:
+                    // 1. Current Tier (highlighted)
+                    // 2. Future/Better Tiers
+                    // 3. Maybe one lower tier for context? No, user only cares about savings.
+
+                    // Filter: Show if tier.min >= activeTier.min (or if it's the current tier logic)
+                    // Let's just map all relevant ones.
+
+                    // We need to identify if this row is the "Current Active Row".
+                    // The "Active Tier" is the one where `currentGrandTotal >= tier.min`. 
+                    // Since we sorted asc, we find the LAST one that satisfies this. (Or we use the calc logic).
+                    // Actually, let's keep it simple.
+                    // Show Tiers that are >= currentTierMin.
+
+                    if (tier.min < currentTierMin) return null; // Hide already passed tiers?
+                    // Actually, show the *current* tier even if we are far past it? 
+                    // No, `currentTierMin` is the floor of the current bucket.
+                    // e.g. if we are at 480 (Range 300-499). currentTierMin is 300.
+                    // We want to show the 300 tier (Current) and 500 tier (Next).
+
+                    // Special case: If we are at 0-199 (Tier 0). We show Tier 0, Tier 200, etc.
+
+                    const isCurrentLoopTier = tier.min === currentTierMin;
+                    const isPast = tier.min < currentTierMin;
+
+                    // If we only show >= currentTierMin, we are good.
+
+                    const tierTotal = Math.ceil(totalQty * tier.price);
+
+                    return (
+                      <tr key={tier.min} className={isCurrentLoopTier ? "current-scenario" : ""}>
+                        <td>
+                          {tier.min}張
+                          {isCurrentLoopTier && <span className="current-tag">目前</span>}
+                          {/* calculated needed for next tiers */
+                            !isCurrentLoopTier && tier.min > currentGrandTotal && (
+                              <div style={{ fontSize: '0.75em', color: '#94a3b8' }}>
+                                (差 {tier.min - currentGrandTotal} 張)
+                              </div>
+                            )
+                          }
+                        </td>
+                        <td>${tier.price}</td>
+                        <td style={{ fontWeight: 'bold', color: isCurrentLoopTier ? '#fbbf24' : 'white' }}>
+                          ${tierTotal.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="estimated-note" style={{ marginTop: '10px', textAlign: 'right' }}>
+                * 最終金額以結單時之全體總量為準
               </div>
             </div>
 
+            {/* 
             <div className="final-price-block">
-              <span className="final-amount-label">您的預估金額</span>
-              <span className="final-amount">${totalPrice.toLocaleString()}</span>
+               REMOVED
             </div>
-            {(() => {
-              // Find next tier logic
-              const nextTier = PRICING_TIERS.slice().reverse().find(t => t.min > currentTierMin && t.price < pricePerUnit);
-              if (nextTier && totalQty > 0) {
-                const needed = Math.max(0, nextTier.min - currentGrandTotal);
-                const potentialSaving = (pricePerUnit - nextTier.price) * totalQty;
-                // Only show if there IS a next tier and savings are positive
-                if (potentialSaving > 0) {
-                  return (
-                    <div className="savings-opportunity">
-                      🔥 若全體再累積 <strong>{needed.toLocaleString()}</strong> 張，
-                      您的金額將變為 <strong>${Math.round(nextTier.price * totalQty).toLocaleString()}</strong>
-                      (省下 <strong>${Math.round(potentialSaving).toLocaleString()}</strong>)。
-                    </div>
-                  );
-                }
-              }
-              return null;
-            })()}
-            <div className="estimated-note">
-              * 實際金額將於截止後，依全體最終累積總量結算
-            </div>
+            */}
           </div>
 
           <div style={{ marginTop: '20px' }}>
