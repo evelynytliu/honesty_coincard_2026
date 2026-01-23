@@ -117,9 +117,13 @@ function AdminOrders() {
     return (
         <div className="admin-container" style={{ maxWidth: '1200px', margin: '0 auto', color: 'white' }}>
             <div className="glass-card admin-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                    <h1 style={{ fontSize: '2rem', margin: 0 }}>📋 預訂管理後台</h1>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h1 style={{ fontSize: '2rem', margin: 0 }}>📋 預訂管理後台</h1>
+                        <a href="./" style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }}>返回首頁</a>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>系統操作：</span>
                         <button
                             onClick={handleToggleForcedOpen}
                             disabled={updatingSettings}
@@ -132,14 +136,15 @@ function AdminOrders() {
                                 cursor: 'pointer',
                                 fontWeight: 'bold',
                                 opacity: updatingSettings ? 0.7 : 1,
-                                transition: 'all 0.2s'
+                                transition: 'all 0.2s',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                             }}
                         >
-                            {isForcedOpen ? '🔴 關閉手動加開' : '🟢 手動加開預訂'}
+                            {isForcedOpen ? '🔴 關閉手動加開 (目前開啟中)' : '🟢 手動加開預訂 (超時仍可預訂)'}
                         </button>
-                        <a href="./" style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }}>返回首頁</a>
                     </div>
                 </div>
+
 
                 {isForcedOpen && (
                     <div style={{
