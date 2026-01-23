@@ -45,6 +45,7 @@ function App() {
   const totalSystemCount = totalSystemCountA + totalSystemCountB;
   const [lightboxImg, setLightboxImg] = useState(null); // New state for lightbox
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
+  const [isForcedOpen, setIsForcedOpen] = useState(false);
   const [viewSideA, setViewSideA] = useState('right');
   const [viewSideB, setViewSideB] = useState('right');
 
@@ -61,10 +62,8 @@ function App() {
   const DEADLINE = new Date('2026-01-23T17:00:00');
 
   // Derived state
-  // Derived state
   const totalQty = (parseInt(qtyA) || 0) + (parseInt(qtyB) || 0);
   // Price is based on the GRAND TOTAL (System + Current User), "Group Buy" logic
-  // If totalSystemCount is 0 (initial load), it might default to lowest tier until fetched
   const currentGrandTotal = totalSystemCount + totalQty;
   const pricePerUnit = getPricePerUnit(currentGrandTotal);
   const activeTier = PRICING_TIERS.find(t => currentGrandTotal >= t.min);
@@ -74,27 +73,32 @@ function App() {
   // Fetch initial total and subscribe
   useEffect(() => {
     fetchTotal();
+    fetchSettings();
 
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'cny_card_orders',
-        },
+        { event: 'INSERT', schema: 'public', table: 'cny_card_orders' },
         (payload) => {
-          // Optimistically update or re-fetch
-          // payload.new contains the new row
           setTotalSystemCountA((prev) => prev + (payload.new.card_type_a_qty || 0));
           setTotalSystemCountB((prev) => prev + (payload.new.card_type_b_qty || 0));
         }
       )
       .subscribe();
 
+    const settingsChannel = supabase
+      .channel('settings-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cny_card_settings' },
+        () => fetchSettings()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(settingsChannel);
     };
   }, []);
 
@@ -122,8 +126,6 @@ function App() {
   }, []);
 
   async function fetchTotal() {
-    // We fetch all rows to calculate specific totals for A and B
-    // This allows us to show the breakdown correctly (Gold Horse vs Money Horse)
     const { data: rows, error: tableError } = await supabase
       .from('cny_card_orders')
       .select('card_type_a_qty, card_type_b_qty');
@@ -139,6 +141,25 @@ function App() {
       setTotalSystemCountB(sumB);
     }
   }
+
+  async function fetchSettings() {
+    try {
+      const { data } = await supabase
+        .from('cny_card_settings')
+        .select('value')
+        .eq('key', 'is_booking_forced_open')
+        .maybeSingle();
+
+      if (data) {
+        setIsForcedOpen(data.value);
+      }
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+    }
+  }
+
+  const actuallyExpired = timeLeft.expired && !isForcedOpen;
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -266,8 +287,8 @@ function App() {
             接充滿希望的 2026 馬年，讓我們以「金馬呈祥」與「馬上有錢」這兩款一元賀歲小卡，
             表達對夥伴與客戶最真摯的祝福。
           </p>
-          <div style={{ marginTop: '1rem', color: 'var(--accent-gold)', fontWeight: 'bold', fontSize: '1.2rem' }}>
-            ⏳ 預訂截止時間：2026/1/23 (五) 17:00
+          <div style={{ marginTop: '1rem', color: (actuallyExpired ? '#ef4444' : 'var(--accent-gold)'), fontWeight: 'bold', fontSize: '1.2rem' }}>
+            ⏳ 預訂截止時間：2026/1/23 (五) 17:00 {actuallyExpired && '(已結束)'} {isForcedOpen && timeLeft.expired && '(主揪已手動加開)'}
           </div>
         </div>
 
@@ -480,57 +501,40 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {PRICING_TIERS.slice().sort((a, b) => a.min - b.min).map((tier, index) => {
-                    // Only show current tier and higher/better tiers (which have equal or higher min than current active tier, OR equal to current active tier)
-                    // Wait, we want to show:
-                    // 1. Current Tier (highlighted)
-                    // 2. Future/Better Tiers
-                    // 3. Maybe one lower tier for context? No, user only cares about savings.
+                  {(() => {
+                    const sortedTiers = PRICING_TIERS.slice().sort((a, b) => a.min - b.min);
+                    // Find index of current tier
+                    const currentIndex = sortedTiers.findIndex(t => t.min === currentTierMin);
+                    // We want to show "Current" and "Next" (if exists) -> Index and Index+1
+                    // However, we must ensure we found it. If currentTierMin is 0, index is 0.
 
-                    // Filter: Show if tier.min >= activeTier.min (or if it's the current tier logic)
-                    // Let's just map all relevant ones.
+                    const rowsToShow = sortedTiers.slice(currentIndex, currentIndex + 2);
 
-                    // We need to identify if this row is the "Current Active Row".
-                    // The "Active Tier" is the one where `currentGrandTotal >= tier.min`. 
-                    // Since we sorted asc, we find the LAST one that satisfies this. (Or we use the calc logic).
-                    // Actually, let's keep it simple.
-                    // Show Tiers that are >= currentTierMin.
+                    return rowsToShow.map((tier) => {
+                      const isCurrentLoopTier = tier.min === currentTierMin;
+                      const tierTotal = Math.ceil(totalQty * tier.price);
 
-                    if (tier.min < currentTierMin) return null; // Hide already passed tiers?
-                    // Actually, show the *current* tier even if we are far past it? 
-                    // No, `currentTierMin` is the floor of the current bucket.
-                    // e.g. if we are at 480 (Range 300-499). currentTierMin is 300.
-                    // We want to show the 300 tier (Current) and 500 tier (Next).
-
-                    // Special case: If we are at 0-199 (Tier 0). We show Tier 0, Tier 200, etc.
-
-                    const isCurrentLoopTier = tier.min === currentTierMin;
-                    const isPast = tier.min < currentTierMin;
-
-                    // If we only show >= currentTierMin, we are good.
-
-                    const tierTotal = Math.ceil(totalQty * tier.price);
-
-                    return (
-                      <tr key={tier.min} className={isCurrentLoopTier ? "current-scenario" : ""}>
-                        <td>
-                          {tier.min}張
-                          {isCurrentLoopTier && <span className="current-tag">目前</span>}
-                          {/* calculated needed for next tiers */
-                            !isCurrentLoopTier && tier.min > currentGrandTotal && (
-                              <div style={{ fontSize: '0.75em', color: '#94a3b8' }}>
-                                (差 {tier.min - currentGrandTotal} 張)
-                              </div>
-                            )
-                          }
-                        </td>
-                        <td>${tier.price}</td>
-                        <td style={{ fontWeight: 'bold', color: isCurrentLoopTier ? '#fbbf24' : 'white' }}>
-                          ${tierTotal.toLocaleString()}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                      return (
+                        <tr key={tier.min} className={isCurrentLoopTier ? "current-scenario" : ""}>
+                          <td>
+                            {tier.min}張
+                            {isCurrentLoopTier && <span className="current-tag">目前</span>}
+                            {/* calculated needed for next tiers */
+                              !isCurrentLoopTier && tier.min > currentGrandTotal && (
+                                <div style={{ fontSize: '0.75em', color: '#94a3b8' }}>
+                                  (差 {tier.min - currentGrandTotal} 張)
+                                </div>
+                              )
+                            }
+                          </td>
+                          <td>${tier.price}</td>
+                          <td style={{ fontWeight: 'bold', color: isCurrentLoopTier ? '#fbbf24' : 'white' }}>
+                            ${tierTotal.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
                 </tbody>
               </table>
               <div className="estimated-note" style={{ marginTop: '10px', textAlign: 'right' }}>
@@ -546,10 +550,11 @@ function App() {
           </div>
 
           <div style={{ marginTop: '20px' }}>
-            <button type="submit" className="submit-btn" disabled={submitting || totalQty <= 0 || timeLeft.expired}>
-              {timeLeft.expired ? '已截止預訂' : (submitting ? '送出中...' : '確認預訂')}
+            <button type="submit" className="submit-btn" disabled={submitting || totalQty <= 0 || actuallyExpired}>
+              {actuallyExpired ? '已截止預訂' : (submitting ? '送出中...' : '確認預訂')}
             </button>
-            {timeLeft.expired && <p style={{ color: '#ef4444', marginTop: '10px' }}>預訂時間已過，感謝您的支持。</p>}
+            {actuallyExpired && <p style={{ color: '#ef4444', marginTop: '10px' }}>預訂時間已過，感謝您的支持。</p>}
+            {isForcedOpen && timeLeft.expired && <p style={{ color: '#10b981', marginTop: '10px' }}>💡 主揪已手動為您加開預訂時間！</p>}
           </div>
 
         </form>
@@ -573,12 +578,15 @@ function App() {
 
       {/* Floating Action Button with Countdown */}
       <div className="floating-action-group">
-        {!timeLeft.expired && (
+        {!actuallyExpired && (
           <div className="countdown-bubble">
-            <div className="countdown-label">距離截止還剩</div>
-            <div className="countdown-time">
-              {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
-            </div>
+            <div className="countdown-label">{timeLeft.expired ? '主揪手動加開中' : '距離截止還剩'}</div>
+            {!timeLeft.expired && (
+              <div className="countdown-time">
+                {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+              </div>
+            )}
+            {timeLeft.expired && <div className="countdown-time" style={{ fontSize: '0.8rem' }}>把握機會預訂唷！</div>}
           </div>
         )}
         <a href="#order-form" className="floating-order-btn" title="我要預訂">

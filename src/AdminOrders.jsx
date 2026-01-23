@@ -7,6 +7,8 @@ function AdminOrders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [grandTotalQty, setGrandTotalQty] = useState(0);
+    const [isForcedOpen, setIsForcedOpen] = useState(false);
+    const [updatingSettings, setUpdatingSettings] = useState(false);
 
     // Reusing the pricing tiers for consistency
     const PRICING_TIERS = [
@@ -25,8 +27,9 @@ function AdminOrders() {
 
     useEffect(() => {
         fetchOrders();
+        fetchSettings();
 
-        // Set up real-time subscription
+        // Set up real-time subscription for orders
         const channel = supabase
             .channel('admin-table-changes')
             .on(
@@ -36,14 +39,24 @@ function AdminOrders() {
             )
             .subscribe();
 
+        // Set up real-time subscription for settings
+        const settingsChannel = supabase
+            .channel('settings-changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'cny_card_settings' },
+                () => fetchSettings()
+            )
+            .subscribe();
+
         return () => {
             supabase.removeChannel(channel);
+            supabase.removeChannel(settingsChannel);
         };
     }, []);
 
     async function fetchOrders() {
         setLoading(true);
-        // Fetch all orders
         const { data, error } = await supabase
             .from('cny_card_orders')
             .select('*')
@@ -53,14 +66,45 @@ function AdminOrders() {
             console.error('Error fetching orders:', error);
         } else {
             setOrders(data || []);
-
-            // Calculate Grand Total from all orders on client side to be safe
             const total = (data || []).reduce((acc, order) => {
                 return acc + order.card_type_a_qty + order.card_type_b_qty;
             }, 0);
             setGrandTotalQty(total);
         }
         setLoading(false);
+    }
+
+    async function fetchSettings() {
+        try {
+            const { data, error } = await supabase
+                .from('cny_card_settings')
+                .select('value')
+                .eq('key', 'is_booking_forced_open')
+                .maybeSingle();
+
+            if (data) {
+                setIsForcedOpen(data.value);
+            }
+        } catch (err) {
+            console.error('Error fetching settings:', err);
+        }
+    }
+
+    async function handleToggleForcedOpen() {
+        setUpdatingSettings(true);
+        const newValue = !isForcedOpen;
+
+        const { error } = await supabase
+            .from('cny_card_settings')
+            .upsert({ key: 'is_booking_forced_open', value: newValue }, { onConflict: 'key' });
+
+        if (error) {
+            console.error('Error updating settings:', error);
+            alert('更新失敗，請確認資料表 cny_card_settings 是否已建立。');
+        } else {
+            setIsForcedOpen(newValue);
+        }
+        setUpdatingSettings(false);
     }
 
     // Calculate current dynamic price
@@ -75,8 +119,42 @@ function AdminOrders() {
             <div className="glass-card admin-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                     <h1 style={{ fontSize: '2rem', margin: 0 }}>📋 預訂管理後台</h1>
-                    <a href="./" style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }}>返回首頁</a>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <button
+                            onClick={handleToggleForcedOpen}
+                            disabled={updatingSettings}
+                            style={{
+                                background: isForcedOpen ? '#ef4444' : '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                opacity: updatingSettings ? 0.7 : 1,
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {isForcedOpen ? '🔴 關閉手動加開' : '🟢 手動加開預訂'}
+                        </button>
+                        <a href="./" style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }}>返回首頁</a>
+                    </div>
                 </div>
+
+                {isForcedOpen && (
+                    <div style={{
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid #ef4444',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        textAlign: 'center',
+                        color: '#f87171',
+                        fontSize: '0.9rem'
+                    }}>
+                        ⚠️ 目前已手動開啟預訂功能，即便超過截止時間，前端仍可送出訂單。
+                    </div>
+                )}
 
                 <div className="stats-panel" style={{
                     display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem',
@@ -111,7 +189,7 @@ function AdminOrders() {
                         </thead>
                         <tbody>
                             {orders.map(order => {
-                                const orderTotal = order.card_type_a_qty + order.card_type_b_qty;
+                                const orderTotal = (order.card_type_a_qty || 0) + (order.card_type_b_qty || 0);
                                 const dynamicTotal = Math.ceil(orderTotal * currentPrice);
 
                                 return (
@@ -139,3 +217,4 @@ function AdminOrders() {
 }
 
 export default AdminOrders;
+
