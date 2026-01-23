@@ -140,7 +140,7 @@ function AdminOrders() {
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                             }}
                         >
-                            {isForcedOpen ? '🔴 關閉手動加開 (目前開啟中)' : '🟢 手動加開預訂 (超時仍可預訂)'}
+                            {isForcedOpen ? '🔴 關閉手動加開 (目前開啟中)' : '🟢 手動加開預訂'}
                         </button>
                     </div>
                 </div>
